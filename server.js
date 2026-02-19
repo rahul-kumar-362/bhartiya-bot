@@ -10,12 +10,19 @@ const PHONE_ID = "1048324561694185";
 const VERIFY_TOKEN = "rahul123";
 const SARVAM_KEY = "sk_78bcm50t_0IYGbh8IGpReWoMZDmEYmAwX";
 
-app.get("/webhook", (req,res)=>{
- if(req.query["hub.verify_token"]===VERIFY_TOKEN){
-  res.send(req.query["hub.challenge"]);
- } else {
-  res.send("Error");
- }
+app.get("/webhook", (req, res) => {
+  const VERIFY_TOKEN = "rahul123";
+
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    console.log("Webhook verified!");
+    res.status(200).send(challenge);
+  } else {
+    res.sendStatus(403);
+  }
 });
 
 app.post("/webhook", async (req,res)=>{
