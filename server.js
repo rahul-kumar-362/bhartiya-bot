@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
 const bodyParser = require("body-parser");
@@ -5,10 +6,10 @@ const bodyParser = require("body-parser");
 const app = express();
 app.use(bodyParser.json());
 
-const TOKEN = "EAATegfDBuZAQBQjG4LCmTvjXMFZChZBqkqfZBzr8tbtqZBob7ZCWBCAIMKRrZCXBPRUNeOeIPEJg0NHTZC2gG01uG6nyNosvkC70Sc5y6tofzGkWGRZCyVfaQMZAPfcgcPTESOC10mkBe2jR9ZB5RtYunsc5ufEw7wkBzXz4zMQ5xUdXkNvunjAWMLnQE6E7w1dYoZAygnnVUcwucdjZBbBj45C6ZB8PpEilcYffwG55LlYM27ZAKZBwc88A6RaP8AJpcSJefRs90gKQ0wo1ULHZC73Y3xFLUylw8";
-const PHONE_ID = "1048324561694185";
-const VERIFY_TOKEN = "rahul123";
-const SARVAM_KEY = "sk_78bcm50t_0IYGbh8IGpReWoMZDmEYmAwX";
+const TOKEN = process.env.WHATSAPP_TOKEN;
+const PHONE_ID = process.env.WHATSAPP_PHONE_ID;
+const VERIFY_TOKEN = process.env.WEBHOOK_VERIFY_TOKEN;
+const SARVAM_KEY = process.env.SARVAM_API_KEY;
 
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
