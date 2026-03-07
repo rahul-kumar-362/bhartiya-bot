@@ -93,6 +93,13 @@ app.post("/api/chat", async (req, res) => {
 
     console.log("Demo User:", message);
 
+    if (!SARVAM_KEY) {
+      console.error("SARVAM_API_KEY is not set!");
+      return res.status(500).json({
+        reply: "Parth, the divine connection is not configured. Please set SARVAM_API_KEY."
+      });
+    }
+
     const ai = await axios.post(
       "https://api.sarvam.ai/v1/chat/completions",
       {
@@ -106,7 +113,8 @@ app.post("/api/chat", async (req, res) => {
         headers: {
           Authorization: `Bearer ${SARVAM_KEY}`,
           "Content-Type": "application/json"
-        }
+        },
+        timeout: 30000
       }
     );
 
@@ -118,7 +126,12 @@ app.post("/api/chat", async (req, res) => {
 
     res.json({ reply });
   } catch (err) {
-    console.error("API Error:", err.response?.data || err.message);
+    console.error("API Error Details:", {
+      status: err.response?.status,
+      data: err.response?.data,
+      message: err.message,
+      code: err.code
+    });
     res.status(500).json({
       reply: "Parth, my guidance is momentarily clouded. Please try again."
     });
