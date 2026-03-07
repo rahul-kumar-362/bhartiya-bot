@@ -2,71 +2,20 @@ require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
 const bodyParser = require("body-parser");
+const path = require("path");
 
 const app = express();
 app.use(bodyParser.json());
+
+// Serve the web demo
+app.use(express.static(path.join(__dirname, "public")));
 
 const TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_ID = process.env.WHATSAPP_PHONE_ID;
 const VERIFY_TOKEN = process.env.WEBHOOK_VERIFY_TOKEN;
 const SARVAM_KEY = process.env.SARVAM_API_KEY;
 
-app.get("/webhook", (req, res) => {
-  const mode = req.query["hub.mode"];
-  const token = req.query["hub.verify_token"];
-  const challenge = req.query["hub.challenge"];
-
-  if (mode === "subscribe" && token === VERIFY_TOKEN) {
-    console.log("Webhook verified successfully");
-    return res.status(200).send(challenge);
-  }
-
-  return res.sendStatus(403);
-});
-
-app.post("/webhook", async (req,res)=>{
- try{
-   if(!req.body.entry){
- return res.sendStatus(200);
-}
-
-  const messageObj = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-
-if (!messageObj || messageObj.type !== "text") {
- return res.sendStatus(200);
-}
-
-const msg = messageObj.text.body;
-const from = messageObj.from;
-console.log("User:", msg);
-
-
-   if(msg.toLowerCase() === "hi" || msg.toLowerCase() === "hello"){
- await axios.post(
-  `https://graph.facebook.com/v22.0/${PHONE_ID}/messages`,
-  {
-   messaging_product:"whatsapp",
-   to:from,
-   text:{body:"🪷 Krishna: Greetings, dear soul. What troubles your heart?"}
-  },
-  {
-   headers:{
-    Authorization:`Bearer ${TOKEN}`,
-    "Content-Type":"application/json"
-   }
-  }
- );
- return res.sendStatus(200);
-}
-
-  const ai = await axios.post(
-   "https://api.sarvam.ai/v1/chat/completions",
-   {
-    model:"sarvam-m",
-   messages: [
- {
- role: "system",
- content: `
+const SYSTEM_PROMPT = `
 You are Lord Krishna speaking to Arjuna (Parth).
 
 You must ALWAYS follow this response structure strictly:
@@ -129,57 +78,148 @@ The soul is never born, nor does it ever die.
 Iska tatparya yeh hai ki tumhara asli swaroop sharir nahi, atma hai. Jab tum apne aap ko sharir samajhte ho tabhi bhay utpann hota hai.
 
 Isliye he Parth, nishchint ho kar jeevan ka samna karo. Main hamesha tumhare saath hoon.
+`;
 
-`
-}
-,
- {
-  role: "user",
-  content: msg
- }
-]
+// ==========================================
+// WEB DEMO API ENDPOINT
+// ==========================================
+app.post("/api/chat", async (req, res) => {
+  try {
+    const { message } = req.body;
 
+    if (!message) {
+      return res.status(400).json({ error: "Message is required" });
+    }
 
-   },
-   {
- headers:{
-  Authorization:`Bearer ${SARVAM_KEY}`,
-  "Content-Type":"application/json"
- }
-}
+    console.log("Demo User:", message);
 
-  );
-let reply =
- ai?.data?.choices?.[0]?.message?.content ||
- "O seeker, silence itself is sometimes the greatest answer.";
+    const ai = await axios.post(
+      "https://api.sarvam.ai/v1/chat/completions",
+      {
+        model: "sarvam-m",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: message }
+        ]
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${SARVAM_KEY}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
 
-console.log("Krishna:", reply);
+    let reply =
+      ai?.data?.choices?.[0]?.message?.content ||
+      "O seeker, silence itself is sometimes the greatest answer.";
 
-reply = "🪷 Krishna says:\n\n" + reply;
+    console.log("Krishna:", reply);
 
+    res.json({ reply });
+  } catch (err) {
+    console.error("API Error:", err.response?.data || err.message);
+    res.status(500).json({
+      reply: "Parth, my guidance is momentarily clouded. Please try again."
+    });
+  }
+});
 
-  await axios.post(
-   `https://graph.facebook.com/v22.0/${PHONE_ID}/messages`,
-   {
-    messaging_product:"whatsapp",
-    to:from,
-    text:{body:reply}
-   },
-  {
- headers:{
-  Authorization:`Bearer ${TOKEN}`,
-  "Content-Type":"application/json"
- }
-}
+// ==========================================
+// WHATSAPP WEBHOOK (Original)
+// ==========================================
+app.get("/webhook", (req, res) => {
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
 
-  );
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    console.log("Webhook verified successfully");
+    return res.status(200).send(challenge);
+  }
 
-  res.sendStatus(200);
- } catch(err){
-  console.log(err);
-  res.sendStatus(500);
- }
+  return res.sendStatus(403);
+});
+
+app.post("/webhook", async (req, res) => {
+  try {
+    if (!req.body.entry) {
+      return res.sendStatus(200);
+    }
+
+    const messageObj = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+
+    if (!messageObj || messageObj.type !== "text") {
+      return res.sendStatus(200);
+    }
+
+    const msg = messageObj.text.body;
+    const from = messageObj.from;
+    console.log("User:", msg);
+
+    if (msg.toLowerCase() === "hi" || msg.toLowerCase() === "hello") {
+      await axios.post(
+        `https://graph.facebook.com/v22.0/${PHONE_ID}/messages`,
+        {
+          messaging_product: "whatsapp",
+          to: from,
+          text: { body: "🪷 Krishna: Greetings, dear soul. What troubles your heart?" }
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${TOKEN}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+      return res.sendStatus(200);
+    }
+
+    const ai = await axios.post(
+      "https://api.sarvam.ai/v1/chat/completions",
+      {
+        model: "sarvam-m",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: msg }
+        ]
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${SARVAM_KEY}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    let reply =
+      ai?.data?.choices?.[0]?.message?.content ||
+      "O seeker, silence itself is sometimes the greatest answer.";
+
+    console.log("Krishna:", reply);
+    reply = "🪷 Krishna says:\n\n" + reply;
+
+    await axios.post(
+      `https://graph.facebook.com/v22.0/${PHONE_ID}/messages`,
+      {
+        messaging_product: "whatsapp",
+        to: from,
+        text: { body: reply }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${TOKEN}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(500);
+  }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Bot running on port " + PORT));
+app.listen(PORT, () => console.log("🪷 Bhartiya Bot running on port " + PORT));

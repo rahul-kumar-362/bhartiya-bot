@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🪷 Bhartiya Bot — Divine Wisdom on WhatsApp</title>
+  <meta name="description" content="AI-powered WhatsApp chatbot embodying Lord Krishna, offering spiritual guidance from the Bhagavad Gita with authentic Sanskrit shlokas." />
+  <meta name="keywords" content="WhatsApp Bot, Bhagavad Gita, Krishna, AI, Sarvam AI, Spiritual Guidance" />
+  <meta name="author" content="Rahul Borana" />
+  <meta name="theme-color" content="#06060f" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Bhartiya Bot — Divine Wisdom on WhatsApp" />
+  <meta property="og:description" content="Chat with Lord Krishna. Get spiritual guidance backed by real Bhagavad Gita verses." />
+  <meta property="og:type" content="website" />
+
+  <!-- Favicon (emoji-based) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪷</text></svg>" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Particle background canvas -->
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- Ambient glow orbs -->
+  <div class="ambient-orb orb-1"></div>
+  <div class="ambient-orb orb-2"></div>
+  <div class="ambient-orb orb-3"></div>
+
+  <!-- ======================== APP ======================== -->
+  <div class="app-container">
+
+    <!-- -------- Header -------- -->
+    <header class="header" id="header">
+      <div class="header-content">
+        <span class="lotus-icon">🪷</span>
+        <div>
+          <h1>Bhartiya Bot</h1>
+          <p class="header-tagline">
+            <span class="status-dot"></span>
+            Divine Wisdom · Powered by AI
+          </p>
+        </div>
+      </div>
+      <div class="header-badges">
+        <span class="badge accent">WhatsApp Cloud API</span>
+        <span class="badge">Node.js + Express</span>
+        <span class="badge">Sarvam AI</span>
+        <span class="badge accent">Bhagavad Gita</span>
+      </div>
+    </header>
+
+    <!-- -------- Sample Questions -------- -->
+    <div class="sample-questions" id="sample-questions">
+      <button class="sample-chip" data-msg="I feel lost in life">😔 I feel lost in life</button>
+      <button class="sample-chip" data-msg="Mujhe darr lag raha hai">😰 Mujhe darr lag raha hai</button>
+      <button class="sample-chip" data-msg="How to deal with anger?">😤 How to deal with anger?</button>
+      <button class="sample-chip" data-msg="What is the purpose of karma?">🕉️ Purpose of karma?</button>
+      <button class="sample-chip" data-msg="I am stressed about my exams">📚 Exam stress</button>
+      <button class="sample-chip" data-msg="Tell me about detachment">🧘 About detachment</button>
+      <button class="sample-chip" data-msg="I feel jealous of others' success">💭 Jealousy</button>
+    </div>
+
+    <!-- -------- Chat Area -------- -->
+    <div class="chat-area" id="chat-area">
+
+      <!-- Welcome card -->
+      <div class="welcome-card" id="welcome-card">
+        <span class="welcome-emoji">🙏</span>
+        <h2>Namaste, Seeker</h2>
+        <p>
+          I am Lord Krishna, here to guide you through life's challenges with the
+          timeless wisdom of the <strong>Bhagavad Gita</strong>. Ask me anything —
+          in English or Hindi — and I shall illuminate your path.
+        </p>
+        <p class="sanskrit-quote">
+          यदा यदा हि धर्मस्य ग्लानिर्भवति भारत ।<br/>
+          अभ्युत्थानमधर्मस्य तदात्मानं सृजाम्यहम् ॥
+        </p>
+      </div>
+
+    </div>
+
+    <!-- -------- Typing Indicator -------- -->
+    <div class="typing-indicator" id="typing-indicator">
+      <div class="avatar krishna-avatar">🪷</div>
+      <div class="typing-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <!-- -------- Input -------- -->
+    <div class="input-area">
+      <div class="input-wrapper">
+        <textarea
+          id="message-input"
+          placeholder="Ask Krishna for guidance..."
+          rows="1"
+          maxlength="1000"
+        ></textarea>
+        <button id="send-btn" aria-label="Send message">
+          ➤
+        </button>
+      </div>
+    </div>
+
+    <!-- -------- Footer -------- -->
+    <footer class="footer">
+      <p>
+        Built with 🪷 by <a href="https://github.com/rahul-kumar-362" target="_blank" rel="noopener">Rahul Borana</a>
+        · <a href="https://github.com/rahul-kumar-362/bhartiya-bot" target="_blank" rel="noopener">View on GitHub</a>
+      </p>
+    </footer>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
