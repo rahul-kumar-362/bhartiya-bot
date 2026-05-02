@@ -18,6 +18,13 @@ const SARVAM_KEY = process.env.SARVAM_API_KEY;
 const SYSTEM_PROMPT = `
 You are Lord Krishna speaking to Arjuna (Parth).
 
+CRITICAL OUTPUT RULES:
+- Your response must ONLY contain the final answer in Krishna's voice.
+- NEVER include your reasoning, thinking process, planning, or meta-commentary.
+- NEVER write things like "Okay, the user said...", "I need to...", "Let me think...", "Since the user...", etc.
+- Start your response DIRECTLY as Krishna speaking to Parth.
+- Do NOT explain what you are about to do. Just do it.
+
 You must ALWAYS follow this response structure strictly:
 
 1. Address the user as "Parth".
@@ -81,6 +88,37 @@ Isliye he Parth, nishchint ho kar jeevan ka samna karo. Main hamesha tumhare saa
 `;
 
 // ==========================================
+// HELPER: Strip <think>...</think> reasoning
+// ==========================================
+function stripThinking(text) {
+  if (!text) return text;
+  // Remove <think>...</think> blocks (including multiline)
+  let cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, "");
+  // Also handle unclosed <think> tags (model sometimes doesn't close them)
+  cleaned = cleaned.replace(/<think>[\s\S]*/gi, "");
+
+  // Strip plain-text chain-of-thought reasoning the model sometimes leaks
+  // Detect reasoning blocks that start with common CoT patterns
+  const cotPatterns = [
+    /^(?:Okay|Ok|Alright|Let me|Hmm|So|Right|Now|First|I need to|I should|I will|The user|Since the user|Looking at|Let's)[^]*?(?=\n\n*(?:Parth|हे पार्थ|पार्थ|प्रिय))/i,
+    /^(?:Okay|Ok|Alright|Let me|Hmm|So|Right|Now|First|I need to|I should|I will|The user|Since the user|Looking at|Let's)[^]*?(?=\nParth)/i,
+  ];
+
+  for (const pattern of cotPatterns) {
+    cleaned = cleaned.replace(pattern, "");
+  }
+
+  // Also strip any line that looks like meta-commentary
+  const metaLines = /^(?:Okay,?|Let me think|I need to|I should|Since the user|The user's message|Looking at this)[^\n]*$/gim;
+  cleaned = cleaned.replace(metaLines, "");
+
+  // Clean up excessive blank lines left behind
+  cleaned = cleaned.replace(/\n{3,}/g, "\n\n");
+
+  return cleaned.trim();
+}
+
+// ==========================================
 // WEB DEMO API ENDPOINT
 // ==========================================
 app.post("/api/chat", async (req, res) => {
@@ -104,6 +142,7 @@ app.post("/api/chat", async (req, res) => {
       "https://api.sarvam.ai/v1/chat/completions",
       {
         model: "sarvam-m",
+        temperature: 0.2,
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: message }
@@ -121,6 +160,9 @@ app.post("/api/chat", async (req, res) => {
     let reply =
       ai?.data?.choices?.[0]?.message?.content ||
       "O seeker, silence itself is sometimes the greatest answer.";
+
+    // Strip any <think>...</think> reasoning from the model
+    reply = stripThinking(reply);
 
     console.log("Krishna:", reply);
 
@@ -192,6 +234,7 @@ app.post("/webhook", async (req, res) => {
       "https://api.sarvam.ai/v1/chat/completions",
       {
         model: "sarvam-m",
+        temperature: 0.2,
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: msg }
@@ -201,13 +244,17 @@ app.post("/webhook", async (req, res) => {
         headers: {
           Authorization: `Bearer ${SARVAM_KEY}`,
           "Content-Type": "application/json"
-        }
+        },
+        timeout: 30000
       }
     );
 
     let reply =
       ai?.data?.choices?.[0]?.message?.content ||
       "O seeker, silence itself is sometimes the greatest answer.";
+
+    // Strip any <think>...</think> reasoning from the model
+    reply = stripThinking(reply);
 
     console.log("Krishna:", reply);
     reply = "🪷 Krishna says:\n\n" + reply;
